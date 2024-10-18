@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3  # Updated to latest version
+
+    - name: Set up JDK 22
+      uses: actions/setup-java@v3  # Updated to latest version
+      with:
+        distribution: 'temurin'
+        java-version: '22'
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('/.gradle', '/gradle-wrapper.properties', '/*.kts') }}  # Include .kts files
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Set executable permissions for gradlew
+      run: chmod +x app/gradlew
+
+    - name: Build with Gradle
+      run: cd app && ./gradlew build
+
+    - name: Run tests
+      run: cd app && ./gradlew test  # Run tests before building the Docker image
+
+    - name: Build Docker image
+      run: cd app && docker build -t your-application:latest .
+
+    - name: Run Docker Compose
+      run: cd app && docker-compose up -d
+
+    - name: Stop Docker Compose
+      run: cd app && docker-compose down
