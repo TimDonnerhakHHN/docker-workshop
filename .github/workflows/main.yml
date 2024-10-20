@@ -34,21 +34,26 @@ jobs:
           chmod +x gradlew  # Ensure gradlew is executable
           ./gradlew build
 
+      - name: List JAR files
+        working-directory: app/Docker_Leistungsnachweis
+        run: ls -al build/libs  # Verify the JAR file is generated
+
       - name: Run Java Application (ApiClient) and Output Results
         working-directory: app/Docker_Leistungsnachweis
         run: |
-          java -cp build/libs/your_project_name.jar controller.ApiClient
+          # Now using the correct path to the JAR file and package structure
+          java -cp build/libs/Docker_Leistungsnachweis-1.0-SNAPSHOT.jar controller.ApiClient
 
       - name: Display Calculated Results from Console Output
         run: |
           echo "Calculated Results:"
           # Search for Customer ID in the console output
-          java -cp build/libs/your_project_name.jar controller.ApiClient | grep "Customer ID"
+          java -cp build/libs/Docker_Leistungsnachweis-1.0-SNAPSHOT.jar controller.ApiClient | grep "Customer ID"
 
       - name: Submit Calculated Results (POST Request)
         working-directory: app/Docker_Leistungsnachweis
         run: |
-          java -cp build/libs/your_project_name.jar controller.ApiClient
+          java -cp build/libs/Docker_Leistungsnachweis-1.0-SNAPSHOT.jar controller.ApiClient
 
       - name: Stop and Clean Docker Container
         run: |
