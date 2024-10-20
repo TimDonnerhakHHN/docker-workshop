@@ -51,4 +51,4 @@ jobs:
         working-directory: app/Docker_Leistungsnachweis
         run: |
           chmod +x gradlew  # Ensure gradlew is executable
-          ./gradlew test --info
+          ./gradlew test
