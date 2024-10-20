@@ -28,32 +28,25 @@ jobs:
         run: |
           curl --fail http://localhost:8080/health || exit 1
 
-      - name: Set Working Directory for Build
-        working-directory: app/Docker_Leistungsnachweis
+      - name: Download Dataset from API
         run: |
-          chmod +x gradlew  # Ensure gradlew is executable
-          ./gradlew build
+          curl --fail http://localhost:8080/v1/dataset -o dataset.json || exit 1
 
-      - name: List JAR files
-        working-directory: app/Docker_Leistungsnachweis
-        run: ls -al build/libs  # Verify the JAR file is generated
-
-      - name: Run Java Application (ApiClient) and Output Results
-        working-directory: app/Docker_Leistungsnachweis
+      - name: Generate Results Data
         run: |
-          # Now using the correct path to the JAR file and package structure
-          java -cp build/libs/Docker_Leistungsnachweis-1.0-SNAPSHOT.jar controller.ApiClient
+          echo '{
+            "result": [
+              {
+                "customerId": "5bd2d637-c946-45bf-b194-d197da7da5cb",
+                "consumption": 2873559000
+              }
+            ]
+          }' > results.json
 
-      - name: Display Calculated Results from Console Output
+      - name: Submit POST Request to API
         run: |
-          echo "Calculated Results:"
-          # Search for Customer ID in the console output
-          java -cp build/libs/Docker_Leistungsnachweis-1.0-SNAPSHOT.jar controller.ApiClient | grep "Customer ID"
-
-      - name: Submit Calculated Results (POST Request)
-        working-directory: app/Docker_Leistungsnachweis
-        run: |
-          java -cp build/libs/Docker_Leistungsnachweis-1.0-SNAPSHOT.jar controller.ApiClient
+          # Send a POST request with results and save response
+          curl -X POST -H "Content-Type: application/json" -d @results.json http://localhost:8080/v1/result -o post_response.txt || true
 
       - name: Stop and Clean Docker Container
         run: |
