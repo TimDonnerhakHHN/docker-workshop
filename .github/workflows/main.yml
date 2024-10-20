@@ -13,47 +13,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository Code
         uses: actions/checkout@v2
 
-      - name: Pull Assessment Docker Image
+      - name: Pull Docker Image for Assessment
         run: docker pull mrksdh/assessment
 
-      - name: Start Assessment Docker Container
+      - name: Launch Assessment Docker Container
         run: |
           docker run -d --name assessment-test -p 8080:8080 mrksdh/assessment
           sleep 10
 
-      - name: Perform Health Check
+      - name: Perform Application Health Check
         run: |
           curl --fail http://localhost:8080/health || exit 1
 
-      - name: Get Dataset
+      - name: Build Java Project
         run: |
-          curl --fail http://localhost:8080/v1/dataset -o dataset.json || exit 1
+          # We assume your project uses Gradle for building. Adapt if you use Maven or other build systems.
+          chmod +x gradlew  # Ensure gradlew is executable
+          ./gradlew build
 
-      - name: Calculate Results
+      - name: Run Java Application (ApiClient) and Output Results
         run: |
-          echo '{
-            "result": [
-              {
-                "customerId": "5bd2d637-c946-45bf-b194-d197da7da5cb",
-                "consumption": 2873559000
-              }
-            ]
-          }' > results.json
+          # Run your ApiClient class to fetch dataset, process it, and display results
+          java -cp build/libs/your_project_name.jar controller.ApiClient | tee results_output.txt
 
-      - name: Attempt POST Request
+      - name: Display Calculated Results
         run: |
-          # Try sending a POST request and save the response or the error
-          curl -X POST -H "Content-Type: application/json" -d @results.json http://localhost:8080/v1/result -o post_response.txt || true
+          # Output the results that were calculated by ApiClient
+          echo "Calculated Results:"
+          cat results_output.txt | grep "Customer ID"
 
-      - name: Stop and Remove Assessment Container
+      - name: Submit Calculated Results (POST Request)
+        run: |
+          # Now post the results using the ApiClient (this is already handled in your Java code)
+          java -cp build/libs/your_project_name.jar controller.ApiClient
+
+      - name: Stop and Clean Docker Container
         run: |
           docker stop assessment-test
           docker rm assessment-test
 
-      - name: Run Gradle Tests
+      - name: Run Gradle Unit Tests
         working-directory: app/Docker_Leistungsnachweis
         run: |
           chmod +x gradlew  # Ensure gradlew is executable
