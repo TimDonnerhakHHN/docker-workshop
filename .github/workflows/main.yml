@@ -29,22 +29,24 @@ jobs:
           curl --fail http://localhost:8080/health || exit 1
 
       - name: Set Working Directory for Build
-        working-directory:  app/Docker_Leistungsnachweis # Set this to the root where gradlew is located
+        working-directory: app/Docker_Leistungsnachweis
         run: |
           chmod +x gradlew  # Ensure gradlew is executable
           ./gradlew build
 
       - name: Run Java Application (ApiClient) and Output Results
-        working-directory: app/Docker_Leistungsnachweis  # Set this to the root where gradlew is located
+        working-directory: app/Docker_Leistungsnachweis
         run: |
-          java -cp build/libs/your_project_name.jar controller.ApiClient | tee results_output.txt
+          java -cp build/libs/your_project_name.jar controller.ApiClient
 
-      - name: Display Calculated Results
+      - name: Display Calculated Results from Console Output
         run: |
           echo "Calculated Results:"
-          cat results_output.txt | grep "Customer ID"
+          # Search for Customer ID in the console output
+          java -cp build/libs/your_project_name.jar controller.ApiClient | grep "Customer ID"
 
       - name: Submit Calculated Results (POST Request)
+        working-directory: app/Docker_Leistungsnachweis
         run: |
           java -cp build/libs/your_project_name.jar controller.ApiClient
 
@@ -54,7 +56,7 @@ jobs:
           docker rm assessment-test
 
       - name: Run Gradle Unit Tests
-        working-directory: app/Docker_Leistungsnachweis # Set this to the root where gradlew is located
+        working-directory: app/Docker_Leistungsnachweis
         run: |
           chmod +x gradlew  # Ensure gradlew is executable
           ./gradlew test
