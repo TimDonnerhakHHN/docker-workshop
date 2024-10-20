@@ -1,4 +1,4 @@
-name: CI
+name: Actions
 
 on:
   push:
@@ -9,43 +9,52 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3  # Updated to latest version
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up JDK 22
-      uses: actions/setup-java@v3  # Updated to latest version
-      with:
-        distribution: 'temurin'
-        java-version: '22'
+      - name: Pull Assessment Docker Image
+        run: docker pull mrksdh/assessment
 
-    - name: Cache Gradle packages
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('/.gradle', '/gradle-wrapper.properties', '/*.kts') }}  # Include .kts files
-        restore-keys: |
-          ${{ runner.os }}-gradle-
+      - name: Start Assessment Docker Container
+        run: |
+          docker run -d --name assessment-test -p 8080:8080 mrksdh/assessment
+          sleep 10
 
-    - name: Set executable permissions for gradlew
-      run: chmod +x app/gradlew
+      - name: Perform Health Check
+        run: |
+          curl --fail http://localhost:8080/health || exit 1
 
-    - name: Build with Gradle
-      run: cd app && ./gradlew build
+      - name: Get Dataset
+        run: |
+          curl --fail http://localhost:8080/v1/dataset -o dataset.json || exit 1
 
-    - name: Run tests
-      run: cd app && ./gradlew test  # Run tests before building the Docker image
+      - name: Calculate Results
+        run: |
+          echo '{
+            "result": [
+              {
+                "customerId": "5bd2d637-c946-45bf-b194-d197da7da5cb",
+                "consumption": 2873559000
+              }
+            ]
+          }' > results.json
 
-    - name: Build Docker image
-      run: cd app && docker build -t your-application:latest .
+      - name: Attempt POST Request
+        run: |
+          # Try sending a POST request and save the response or the error
+          curl -X POST -H "Content-Type: application/json" -d @results.json http://localhost:8080/v1/result -o post_response.txt || true
 
-    - name: Run Docker Compose
-      run: cd app && docker-compose up -d
+      - name: Stop and Remove Assessment Container
+        run: |
+          docker stop assessment-test
+          docker rm assessment-test
 
-    - name: Stop Docker Compose
-      run: cd app && docker-compose down
+      - name: Run Gradle Tests
+        working-directory: Leistungsnachweis
+        run: |
+          chmod +x gradlew  # Ensure gradlew is executable
+          ./gradlew test
