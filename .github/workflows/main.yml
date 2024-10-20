@@ -29,7 +29,7 @@ jobs:
           curl --fail http://localhost:8080/health || exit 1
 
       - name: Set Working Directory for Build
-        working-directory: ./  # Set this to the root where gradlew is located
+        working-directory:  app/Docker_Leistungsnachweis # Set this to the root where gradlew is located
         run: |
           chmod +x gradlew  # Ensure gradlew is executable
           ./gradlew build
