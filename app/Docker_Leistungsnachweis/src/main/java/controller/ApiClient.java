@@ -5,9 +5,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-
 import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +19,15 @@ import java.util.Map;
 public class ApiClient {
     private static final String GET_URL = "http://localhost:8080/v1/dataset";
     private static final String POST_URL = "http://localhost:8080/v1/result";
+    private HttpClient client;
+
+    public ApiClient() {
+        this.client = HttpClient.newHttpClient();
+    }
+
+    public ApiClient(HttpClient client) {
+        this.client = client != null ? client : HttpClient.newHttpClient();
+    }
 
     /**
      * Fetches a dataset from a predefined URL using an HTTP GET request.
@@ -29,14 +36,11 @@ public class ApiClient {
      */
     public Dataset fetchDataset() {
         try {
-            HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                                              .uri(new URL(GET_URL).toURI())
                                              .GET()
                                              .build();
-
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
             if (response.statusCode() == 200) {
                 String jsonResponse = response.body();
                 Gson gson = new Gson();
@@ -58,33 +62,25 @@ public class ApiClient {
      */
     public void sendResults(Map<String, Long> runtimes) {
         try {
-            HttpClient client = HttpClient.newHttpClient();
             Gson gson = new Gson();
-
             // Create a structure that matches the expected format
             Map<String, Object> requestBody = new HashMap<>();
             List<Map<String, Object>> resultsList = new ArrayList<>();
-
             for (Map.Entry<String, Long> entry : runtimes.entrySet()) {
                 Map<String, Object> resultEntry = new HashMap<>();
                 resultEntry.put("customerId", entry.getKey());
                 resultEntry.put("consumption", entry.getValue());
                 resultsList.add(resultEntry);
             }
-
             requestBody.put("result", resultsList); // Wrap the list in a map with key "result"
-
             // Convert the request body to JSON
             String json = gson.toJson(requestBody);
-
             HttpRequest request = HttpRequest.newBuilder()
                                              .uri(URI.create(POST_URL))
                                              .header("Content-Type", "application/json")
                                              .POST(HttpRequest.BodyPublishers.ofString(json))
                                              .build();
-
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
             if (response.statusCode() == 200) {
                 System.out.println("Results successfully sent.");
             } else {

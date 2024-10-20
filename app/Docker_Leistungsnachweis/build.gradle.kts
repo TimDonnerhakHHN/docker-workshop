@@ -11,10 +11,10 @@ repositories {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
-
     // JUnit 5
-    testImplementation(platform("org.junit:junit-bom:5.10.0")) // Verwende das BOM für Versionierung
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.mockito:mockito-core:4.11.0")
 }
 
 tasks.test {

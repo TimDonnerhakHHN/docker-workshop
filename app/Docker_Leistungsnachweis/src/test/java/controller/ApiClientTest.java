@@ -2,9 +2,13 @@ package controller;
 
 import org.junit.jupiter.api.Test;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -13,25 +17,24 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ApiClientTest {
 
-    private final ApiClient apiClient = new ApiClient();
-
-    /**
-     * Testet die erfolgreiche Abfrage eines Datasets.
-     * Überprüft, ob das Dataset nicht null ist und ob die Liste der Events nicht leer ist.
-     */
     @Test
-    public void testFetchDataset_Success() {
+    public void testFetchDataset_Success() throws Exception {
+        // Mock HttpClient and HttpResponse
+        HttpClient mockClient = mock(HttpClient.class);
+        HttpResponse<String> mockResponse = mock(HttpResponse.class);
+        when(mockResponse.statusCode()).thenReturn(200);
+        when(mockResponse.body()).thenReturn("{\"events\":[]}");
+        when(mockClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockResponse);
+
+        // Inject mock client into ApiClient
+        ApiClient apiClient = new ApiClient(mockClient);
         Dataset dataset = apiClient.fetchDataset();
 
-        assertNotNull(dataset, "Das Dataset sollte nicht null sein.");
-        assertNotNull(dataset.getEvents(), "Die Liste der Events sollte nicht null sein.");
-        assertFalse(dataset.getEvents().isEmpty(), "Die Liste der Events sollte nicht leer sein.");
+        assertNotNull(dataset, "Dataset should not be null");
+        assertTrue(dataset.getEvents().isEmpty(), "Events list should be empty");
     }
 
-    /**
-     * Testet den Fehlerfall beim Abrufen eines Datasets.
-     * Simuliert eine fehlgeschlagene API-Anfrage und überprüft, ob das Dataset null ist.
-     */
     @Test
     public void testFetchDataset_Failure() {
         ApiClient failingApiClient = new ApiClient() {
@@ -40,29 +43,19 @@ public class ApiClientTest {
                 return null; // Simulieren eines Fehlers
             }
         };
-
         Dataset dataset = failingApiClient.fetchDataset();
-
         assertNull(dataset, "Das Dataset sollte null sein, wenn der API-Aufruf fehlschlägt.");
     }
 
-    /**
-     * Testet den erfolgreichen Versand von Ergebnissen.
-     * Überprüft, ob die Ergebnisse erfolgreich an den Server gesendet werden.
-     */
     @Test
     public void testSendResults_Success() {
         Map<String, Long> runtimes = new HashMap<>();
         runtimes.put("customer1", 100L);
-
+        ApiClient apiClient = new ApiClient();
         apiClient.sendResults(runtimes);
         // Keine Assertion, da sendResults keinen Rückgabewert hat.
     }
 
-    /**
-     * Testet den Fehlerfall beim Versand von Ergebnissen.
-     * Simuliert einen Fehler beim Senden der Ergebnisse.
-     */
     @Test
     public void testSendResults_Failure() {
         ApiClient failingApiClient = new ApiClient() {
@@ -71,10 +64,8 @@ public class ApiClientTest {
                 System.out.println("Fehler beim Senden der Ergebnisse: Falsche URL");
             }
         };
-
         Map<String, Long> runtimes = new HashMap<>();
         runtimes.put("customer1", 100L);
-
         failingApiClient.sendResults(runtimes);
         // Keine Assertion, da sendResults keinen Rückgabewert hat.
     }
