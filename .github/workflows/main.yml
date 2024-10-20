@@ -54,7 +54,8 @@ jobs:
           docker rm assessment-test
 
       - name: Run Gradle Unit Tests
-        working-directory: app/Docker_Leistungsnachweis
-        run: |
-          chmod +x gradlew  # Ensure gradlew is executable
-          ./gradlew test
+          working-directory: app/Docker_Leistungsnachweis
+          run: |
+            chmod +x gradlew  # Ensure gradlew is executable
+            ./gradlew test --info  # Füge --info hinzu, um detaillierte Ausgaben zu erhalten
+
