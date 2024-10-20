@@ -54,7 +54,7 @@ jobs:
           docker rm assessment-test
 
       - name: Run Gradle Tests
-        working-directory: Leistungsnachweis
+        working-directory: Docker_Leistungsnachweis
         run: |
           chmod +x gradlew  # Ensure gradlew is executable
           ./gradlew test
