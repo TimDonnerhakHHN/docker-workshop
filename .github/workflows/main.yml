@@ -23,15 +23,12 @@ jobs:
         run: |
           docker run -d --name assessment-test -p 8080:8080 mrksdh/assessment
           sleep 10
-
       - name: Perform Application Health Check
         run: |
           curl --fail http://localhost:8080/health || exit 1
-
       - name: Download Dataset from API
         run: |
           curl --fail http://localhost:8080/v1/dataset -o dataset.json || exit 1
-
       - name: Generate Results Data
         run: |
           echo '{
@@ -42,20 +39,16 @@ jobs:
               }
             ]
           }' > results.json
-
       - name: Submit POST Request to API
         run: |
           # Send a POST request with results and save response
           curl -X POST -H "Content-Type: application/json" -d @results.json http://localhost:8080/v1/result -o post_response.txt || true
-
       - name: Stop and Clean Docker Container
         run: |
           docker stop assessment-test
           docker rm assessment-test
-
       - name: Run Gradle Unit Tests
-          working-directory: app/Docker_Leistungsnachweis
-          run: |
-            chmod +x gradlew  # Ensure gradlew is executable
-            ./gradlew test --info  # Füge --info hinzu, um detaillierte Ausgaben zu erhalten
-
+        working-directory: app/Docker_Leistungsnachweis
+        run: |
+          chmod +x gradlew  # Ensure gradlew is executable
+          ./gradlew test --info
