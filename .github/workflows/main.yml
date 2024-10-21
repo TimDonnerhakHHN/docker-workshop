@@ -16,19 +16,27 @@ jobs:
       - name: Checkout Repository Code
         uses: actions/checkout@v2
 
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Pull Docker Image for Assessment
         run: docker pull mrksdh/assessment
 
-      - name: Launch Assessment Docker Container
+      - name: Start Docker Compose
         run: |
-          docker run -d --name assessment-test -p 8080:8080 mrksdh/assessment
-          sleep 10
+          docker-compose up -d
+        working-directory: app/Docker_Leistungsnachweis # Passe den Pfad an, falls nötig
+
       - name: Perform Application Health Check
         run: |
           curl --fail http://localhost:8080/health || exit 1
+
       - name: Download Dataset from API
         run: |
           curl --fail http://localhost:8080/v1/dataset -o dataset.json || exit 1
+
       - name: Generate Results Data
         run: |
           echo '{
@@ -39,16 +47,18 @@ jobs:
               }
             ]
           }' > results.json
+
       - name: Submit POST Request to API
         run: |
           # Send a POST request with results and save response
           curl -X POST -H "Content-Type: application/json" -d @results.json http://localhost:8080/v1/result -o post_response.txt || true
-      - name: Stop and Clean Docker Container
-        run: |
-          docker stop assessment-test
-          docker rm assessment-test
+
       - name: Run Gradle Unit Tests
         working-directory: app/Docker_Leistungsnachweis
         run: |
           chmod +x gradlew  # Ensure gradlew is executable
           ./gradlew test
+
+      - name: Stop and Clean Docker Containers
+        run: docker-compose down
+        working-directory: app/Docker_Leistungsnachweis # Passe den Pfad an, falls nötig
