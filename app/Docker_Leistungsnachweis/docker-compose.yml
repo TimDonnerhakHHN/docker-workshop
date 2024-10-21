@@ -1,9 +1,26 @@
 version: '3.8'
 
 services:
+  backend:
+    image: mrksdh/assessment
+    container_name: backend
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: app
+    depends_on:
+      - backend
     ports:
-      - "8080:8080"
+      - "8081:8081"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
