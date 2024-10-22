@@ -16,10 +16,7 @@ services:
     container_name: app
     depends_on:
       - backend
-    ports:
-      - "8081:8081"
-    networks:
-      - app-network
+    network_mode: service:backend
 
 networks:
   app-network:

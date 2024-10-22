@@ -17,8 +17,10 @@ import java.util.Map;
  * the retrieved data.
  */
 public class ApiClient {
-    private static final String GET_URL = "http://localhost:8080/v1/dataset";
-    private static final String POST_URL = "http://localhost:8080/v1/result";
+    // Url zurück zu localhost wenn die Anwendung doch nicht ausgefphrt werden soll mit Docker-Compose
+    private static final String GET_URL = "http://backend:8080/v1/dataset";
+    private static final String POST_URL = "http://backend:8080/v1/result";
+
     private HttpClient client;
 
     public ApiClient() {
